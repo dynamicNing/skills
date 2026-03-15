@@ -46,8 +46,6 @@ def git_info(path):
     branch = run(['git', 'branch', '--show-current'], path)
     if not branch:
         branch = run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], path)
-    description = run(['git', 'config', 'remote.origin.url'], path)
-
     log_raw = run(['git', 'log', '--pretty=format:%h|%an|%ae|%ad|%s',
                    '--date=short', '-20'], path)
     commits = []
@@ -60,7 +58,7 @@ def git_info(path):
             })
 
     total_commits = run(['git', 'rev-list', '--count', 'HEAD'], path)
-    contributors_raw = run(['git', 'log', '--pretty=format:%an|%ae', '--no-duplicates'], path)
+    contributors_raw = run(['git', 'log', '--pretty=format:%an|%ae'], path)
     contributors = []
     seen = set()
     for line in contributors_raw.splitlines():

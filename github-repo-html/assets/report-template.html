@@ -367,34 +367,34 @@
     </div>
     <div class="nav-section">
       <div class="nav-label">Overview</div>
-      <a class="nav-link active" onclick="scrollTo('overview')">
+      <a class="nav-link active" onclick="navScrollTo('overview')">
         <span class="nav-icon">🏠</span> Overview
       </a>
-      <a class="nav-link" onclick="scrollTo('languages')">
+      <a class="nav-link" onclick="navScrollTo('languages')">
         <span class="nav-icon">💻</span> Languages
       </a>
     </div>
     <div class="nav-section">
       <div class="nav-label">Architecture</div>
-      <a class="nav-link" onclick="scrollTo('architecture')">
+      <a class="nav-link" onclick="navScrollTo('architecture')">
         <span class="nav-icon">🏗️</span> Architecture
       </a>
-      <a class="nav-link" onclick="scrollTo('file-tree')">
+      <a class="nav-link" onclick="navScrollTo('file-tree')">
         <span class="nav-icon">📁</span> File Tree
       </a>
     </div>
     <div class="nav-section">
       <div class="nav-label">History</div>
-      <a class="nav-link" onclick="scrollTo('commits')">
+      <a class="nav-link" onclick="navScrollTo('commits')">
         <span class="nav-icon">📝</span> Commits
       </a>
-      <a class="nav-link" onclick="scrollTo('contributors')">
+      <a class="nav-link" onclick="navScrollTo('contributors')">
         <span class="nav-icon">👥</span> Contributors
       </a>
     </div>
     <div class="nav-section">
       <div class="nav-label">Docs</div>
-      <a class="nav-link" onclick="scrollTo('readme')">
+      <a class="nav-link" onclick="navScrollTo('readme')">
         <span class="nav-icon">📖</span> README
       </a>
     </div>
@@ -508,7 +508,7 @@
 </div>
 
 <script>
-function scrollTo(id) {
+function navScrollTo(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -528,7 +528,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Scroll spy
-const sections = ['overview','languages','architecture','file-tree','commits','contributors','readme'];
+const sections = ['overview','languages','architecture','file-tree','commits','contributors','tags','readme'];
 const navLinks = document.querySelectorAll('.nav-link');
 window.addEventListener('scroll', function() {
   let current = '';

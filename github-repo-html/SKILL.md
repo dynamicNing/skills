@@ -7,17 +7,30 @@ description: Analyze a local Git repository and generate a detailed, self-contai
 
 Generate a beautiful, self-contained HTML report for a local Git repository.
 
+## Defaults — never ask the user about these
+
+| Decision | Default |
+|---|---|
+| Repo path not specified | Current working directory |
+| Output path | `<repo-path>/<repo-name>-report.html` |
+| No README | Generate a description from code analysis; omit the README section |
+| No remote URL | Show "local repository" in the hero |
+| No tags | Omit the tags section entirely |
+| Language stats include Markdown/JSON/YAML | Exclude `.md`, `.json`, `.yaml`, `.yml`, `.toml`, `.lock` from language bar; count only programming languages |
+
+Proceed through all steps without pausing to confirm. Only communicate at the end with the output file path.
+
 ## Workflow
 
 ### Step 1 — Collect raw data
 
-Run the collection script. If no path given, use the current working directory.
+The skill directory is always: `~/.claude/skills/github-repo-html/`
 
 ```bash
-python3 <skill-dir>/scripts/collect_repo_info.py [/path/to/repo]
+python3 ~/.claude/skills/github-repo-html/scripts/collect_repo_info.py [/path/to/repo]
 ```
 
-`<skill-dir>` is the directory containing this SKILL.md file.
+If the path was not specified by the user, omit the argument (defaults to cwd).
 
 Output JSON keys: `repo_name`, `repo_path`, `git`, `file_tree`, `language_stats`, `readme`, `package_info`.
 
@@ -30,24 +43,24 @@ Read key source files to understand the architecture. Focus on:
 - Core modules / packages (top 2–3 levels of file tree)
 - `package_info` from the JSON (dependencies reveal tech stack)
 
-Identify logical layers (e.g., CLI → Core → Storage, or UI → API → DB → Cache). Read only what's needed — don't read every file.
+Identify logical layers (e.g., CLI → Core → Storage, or UI → API → DB → Cache). Read only what's needed — stop once the architecture is clear.
 
 ### Step 3 — Generate HTML
 
-Use `assets/report-template.html` as the base. Fill every `{{PLACEHOLDER}}`:
+Read `~/.claude/skills/github-repo-html/assets/report-template.html` and fill every `{{PLACEHOLDER}}`:
 
 | Placeholder | Content |
 |---|---|
 | `{{REPO_NAME}}` | `repo_name` from JSON |
-| `{{REMOTE_URL}}` | `git.remote_url` |
+| `{{REMOTE_URL}}` | `git.remote_url`, or `"local repository"` if empty |
 | `{{REPO_DESCRIPTION}}` | One-sentence description from README + code analysis |
 | `{{CURRENT_BRANCH}}` | `git.current_branch` |
 | `{{TECH_BADGES}}` | `<span class="badge green">Name</span>` per main framework/language |
 | `{{TOTAL_COMMITS}}` | `git.total_commits` |
 | `{{CONTRIBUTOR_COUNT}}` | length of `git.contributors` |
-| `{{FIRST_COMMIT_DATE}}` | `git.first_commit_date` |
-| `{{LAST_COMMIT_DATE}}` | `git.last_commit_date` |
-| `{{PRIMARY_LANGUAGE}}` | top entry in `language_stats` |
+| `{{FIRST_COMMIT_DATE}}` | `git.first_commit_date`, or `—` if empty |
+| `{{LAST_COMMIT_DATE}}` | `git.last_commit_date`, or `—` if empty |
+| `{{PRIMARY_LANGUAGE}}` | top programming language from `language_stats` |
 | `{{LANG_BAR_SEGMENTS}}` | `<div class="seg" style="width:X%;background:#COLOR"></div>` per language |
 | `{{LANG_ITEMS}}` | `<div class="lang-item"><div class="lang-dot" style="background:#COLOR"></div>Name (X%)</div>` |
 | `{{ARCH_SUMMARY}}` | 2–3 sentence architecture overview |
@@ -55,14 +68,16 @@ Use `assets/report-template.html` as the base. Fill every `{{PLACEHOLDER}}`:
 | `{{FILE_TREE_HTML}}` | See file tree format below |
 | `{{COMMIT_LIST_HTML}}` | See commits format below |
 | `{{CONTRIBUTORS_HTML}}` | See contributors format below |
-| `{{TAGS_SECTION}}` | Tags section HTML, or empty string if no tags |
-| `{{README_HTML}}` | README converted to HTML (Markdown → HTML) |
+| `{{TAGS_SECTION}}` | Full tags section HTML if tags exist, otherwise empty string `""` |
+| `{{README_HTML}}` | README converted to HTML; omit the entire section if no README |
 
 #### Language color palette
 
-`#3572A5` Python · `#F1E05A` JavaScript · `#3178C6` TypeScript · `#00ADD8` Go · `#DEA584` Rust · `#B07219` Java · `#A97BFF` Kotlin · `#F05138` Swift · `#701516` Ruby · `#4F5D95` PHP · `#178600` C# · `#555555` C/C++ · `#89E051` Shell · `#E34C26` HTML · `#563D7C` CSS/SCSS · `#CBCB41` YAML · `#A41E22` SQL
+`#3572A5` Python · `#F1E05A` JavaScript · `#3178C6` TypeScript · `#00ADD8` Go · `#DEA584` Rust · `#B07219` Java · `#A97BFF` Kotlin · `#F05138` Swift · `#701516` Ruby · `#4F5D95` PHP · `#178600` C# · `#555555` C/C++ · `#89E051` Shell · `#E34C26` HTML · `#563D7C` CSS/SCSS · `#A41E22` SQL
 
 For unlisted languages cycle: `#58a6ff` · `#bc8cff` · `#d29922` · `#3fb950` · `#f85149`
+
+Calculate each language's percentage from its share of total lines among programming languages only.
 
 #### Arch layers format
 
@@ -101,7 +116,7 @@ Include 3–6 layers. Icons: 🖥️ UI · 🔌 API · 🧠 Core/Logic · 💾 S
 </div>
 ```
 
-File icons by type: `🐍` .py · `📜` .js/.ts · `🎨` .css/.scss · `🌐` .html · `⚙️` .json/.yaml/.toml · `🐳` Dockerfile · `📝` .md · `🦀` .rs · `🐹` .go · `☕` .java · `💎` .rb · `🐘` .php · `🔧` Makefile · `📄` default
+File icons: `🐍` .py · `📜` .js/.ts · `🎨` .css/.scss · `🌐` .html · `⚙️` .json/.yaml/.toml · `🐳` Dockerfile · `📝` .md · `🦀` .rs · `🐹` .go · `☕` .java · `💎` .rb · `🐘` .php · `🔧` Makefile · `📄` default
 
 Render up to depth 4. Collapse dirs deeper than 2 by default (add `collapsed` class to `.tree-children`, set toggle to `▶`).
 
@@ -127,7 +142,7 @@ Render up to depth 4. Collapse dirs deeper than 2 by default (add `collapsed` cl
 </div>
 ```
 
-Avatar initials = first letters of first and last name (or first 2 chars of username). Cycle avatar colors: `#1f6feb` · `#388bfd` · `#2ea043` · `#d29922` · `#bc8cff` · `#f85149`
+Avatar initials = first letters of first and last name (or first 2 chars). Cycle avatar colors: `#1f6feb` · `#388bfd` · `#2ea043` · `#d29922` · `#bc8cff` · `#f85149`
 
 #### Tags section format
 
@@ -145,26 +160,21 @@ Avatar initials = first letters of first and last name (or first 2 chars of user
 
 #### README: Markdown → HTML
 
-Convert inline Markdown manually: `# H1` → `<h1>`, `` `code` `` → `<code>`, ` ```block``` ` → `<pre><code>`, `**b**` → `<strong>`, `*i*` → `<em>`, `[text](url)` → `<a href="url">`, `- item` → `<ul><li>`, blank lines → paragraph breaks.
+Convert inline: `# H1`→`<h1>`, `` `code` ``→`<code>`, ` ```block``` `→`<pre><code>`, `**b**`→`<strong>`, `*i*`→`<em>`, `[t](url)`→`<a href="url">`, `- item`→`<ul><li>`, blank lines→paragraph breaks.
 
 ### Step 4 — Write output
 
-Write the completed HTML to `<repo-path>/<repo-name>-report.html`. Confirm the path to the user.
+Write the completed HTML to `<repo-path>/<repo-name>-report.html`.
 
-The HTML is fully self-contained (all CSS and JS inline in the template — no external CDN or fonts).
+Tell the user: the file path and that they can open it in any browser. Nothing else.
 
 ## Fallback
 
-If the Python script fails (not a git repo, no Python), gather info manually:
+If the Python script fails, gather data manually:
 
 ```bash
 git -C <path> remote get-url origin
 git -C <path> log --pretty=format:"%h|%an|%ad|%s" --date=short -20
 git -C <path> rev-list --count HEAD
+git -C <path> log --pretty=format:"%an|%ae"
 ```
-
-## Notes
-
-- For very large repos (>500 files), limit file tree to depth 3 and cap at 200 files per directory.
-- If no README exists, omit the README section or replace with a generated description.
-- Both Chinese and English content in repo files should be preserved as-is in the output.
