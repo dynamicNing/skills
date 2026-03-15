@@ -25,6 +25,31 @@ This repository contains distributable Claude Code Skills — modular extensions
 
 **触发方式 / Trigger:** 对 Claude 说 "分析这个仓库生成报告" / "analyze my repo and generate an HTML report"
 
+#### 使用方法 / How to Use
+
+安装 skill 后，在 Claude Code 中进入任意本地仓库目录，直接用自然语言触发：
+After installing, open Claude Code in any local repo directory and trigger it naturally:
+
+```
+# 分析当前目录
+帮我分析这个仓库，生成 HTML 报告
+
+# 分析指定路径
+帮我分析 ~/projects/myapp 这个仓库，生成详细说明文档
+
+# English
+analyze this repo and generate an HTML report
+generate a repository report for ~/projects/myapp
+```
+
+Claude 会自动：
+Claude will automatically:
+
+1. 收集 git 信息（远程地址、提交记录、贡献者等）/ Collect git metadata
+2. 读取关键源文件，分析架构分层 / Read key files and analyze architecture
+3. 生成自包含 HTML 文件 / Generate a self-contained HTML file
+4. 输出到 `<仓库名>-report.html`，用浏览器直接打开即可 / Output to `<repo-name>-report.html`, open with any browser
+
 ---
 
 ## 安装 / Installation
