@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{REPO_NAME}} — Repository Report</title>
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0d1117;
+      --bg2:      #161b22;
+      --bg3:      #21262d;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --text2:    #8b949e;
+      --accent:   #58a6ff;
+      --accent2:  #1f6feb;
+      --green:    #3fb950;
+      --orange:   #d29922;
+      --red:      #f85149;
+      --purple:   #bc8cff;
+      --radius:   8px;
+      --sidebar:  260px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      overflow-x: auto;
+    }
+    code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar);
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-logo .repo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 8px;
+    }
+    .sidebar-logo h1 { font-size: 15px; font-weight: 600; word-break: break-all; }
+    .sidebar-logo p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .nav-section { padding: 4px 0; }
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 8px 20px 4px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      color: var(--text2);
+      border-radius: 0;
+      transition: background .15s, color .15s;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--bg3);
+      color: var(--text);
+    }
+    .nav-link .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+
+    /* Main */
+    .main { flex: 1; min-width: 0; padding: 32px 40px; max-width: 960px; }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    .hero-top { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+    .hero-icon {
+      width: 56px; height: 56px;
+      background: var(--accent2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .hero-info h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .hero-info .remote-url {
+      font-size: 13px; color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .hero-info .remote-url a { color: var(--accent); }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .meta-item {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .meta-item .label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+    .meta-item .value { font-size: 15px; font-weight: 600; }
+    .meta-item .value.green { color: var(--green); }
+    .meta-item .value.accent { color: var(--accent); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+    }
+    .badge.green { border-color: var(--green); color: var(--green); background: #1a2f1e; }
+    .badge.blue  { border-color: var(--accent); color: var(--accent); background: #0d1f40; }
+
+    /* ── Section ─────────────────────────────────────────── */
+    .section { margin-bottom: 40px; scroll-margin-top: 20px; }
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .section-icon { font-size: 18px; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--text2); }
+    .stat-card .value { font-size: 22px; font-weight: 700; color: var(--accent); }
+
+    /* ── Language Bar ────────────────────────────────────── */
+    .lang-bar-wrap {
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 16px;
+      background: var(--bg3);
+    }
+    .lang-bar-wrap .seg { height: 100%; transition: width .3s; }
+    .lang-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .lang-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px;
+    }
+    .lang-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── File Tree ───────────────────────────────────────── */
+    .file-tree { font-size: 13px; line-height: 1.8; }
+    .tree-node { padding-left: 18px; position: relative; }
+    .tree-node::before {
+      content: '';
+      position: absolute;
+      left: 6px; top: 0; bottom: 0;
+      border-left: 1px solid var(--border);
+    }
+    .tree-node:last-child::before { bottom: 50%; }
+    .tree-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 1px 0;
+      color: var(--text2);
+      cursor: pointer;
+    }
+    .tree-item:hover { color: var(--text); }
+    .tree-item.dir { color: var(--accent); font-weight: 500; }
+    .tree-item .tree-icon { font-size: 13px; width: 16px; text-align: center; }
+    .tree-toggle { cursor: pointer; user-select: none; }
+    .tree-children { display: block; }
+    .tree-children.collapsed { display: none; }
+
+    /* ── Commits ─────────────────────────────────────────── */
+    .commit-list { display: flex; flex-direction: column; gap: 1px; }
+    .commit-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      transition: background .15s;
+    }
+    .commit-item:hover { background: var(--bg2); }
+    .commit-hash {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--accent);
+      background: var(--bg3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .commit-msg { flex: 1; min-width: 0; }
+    .commit-msg .msg { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .commit-msg .meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .commit-date { font-size: 12px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Architecture ────────────────────────────────────── */
+    .arch-layer {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .arch-layer-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg2);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .arch-layer-header:hover { background: var(--bg3); }
+    .arch-layer-body {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .arch-layer-body ul { padding-left: 20px; }
+    .arch-layer-body li { margin-bottom: 4px; }
+
+    /* ── Markdown ────────────────────────────────────────── */
+    .markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+      margin: 20px 0 10px; color: var(--text);
+    }
+    .markdown h1 { font-size: 22px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .markdown h2 { font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .markdown h3 { font-size: 16px; }
+    .markdown p  { margin-bottom: 12px; color: var(--text2); }
+    .markdown ul, .markdown ol { padding-left: 24px; margin-bottom: 12px; color: var(--text2); }
+    .markdown li { margin-bottom: 4px; }
+    .markdown blockquote {
+      border-left: 3px solid var(--accent2);
+      padding-left: 12px;
+      color: var(--text2);
+      margin: 12px 0;
+    }
+    .markdown table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 13px; }
+    .markdown th, .markdown td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .markdown th { background: var(--bg3); font-weight: 600; }
+    .markdown img { max-width: 100%; border-radius: var(--radius); }
+    .markdown hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── Contributors ────────────────────────────────────── */
+    .contributor-list { display: flex; flex-wrap: wrap; gap: 12px; }
+    .contributor {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 6px 14px 6px 6px;
+    }
+    .contributor-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .contributor-name { font-size: 13px; }
+
+    /* ── Tag/Version ─────────────────────────────────────── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-item {
+      padding: 4px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--purple);
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="repo-icon">📦</div>
+      <h1>{{REPO_NAME}}</h1>
+      <p>Repository Report</p>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-link active" onclick="scrollTo('overview')">
+        <span class="nav-icon">🏠</span> Overview
+      </a>
+      <a class="nav-link" onclick="scrollTo('languages')">
+        <span class="nav-icon">💻</span> Languages
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Architecture</div>
+      <a class="nav-link" onclick="scrollTo('architecture')">
+        <span class="nav-icon">🏗️</span> Architecture
+      </a>
+      <a class="nav-link" onclick="scrollTo('file-tree')">
+        <span class="nav-icon">📁</span> File Tree
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">History</div>
+      <a class="nav-link" onclick="scrollTo('commits')">
+        <span class="nav-icon">📝</span> Commits
+      </a>
+      <a class="nav-link" onclick="scrollTo('contributors')">
+        <span class="nav-icon">👥</span> Contributors
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Docs</div>
+      <a class="nav-link" onclick="scrollTo('readme')">
+        <span class="nav-icon">📖</span> README
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── Main ───────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero" id="overview">
+      <div class="hero-top">
+        <div class="hero-icon">📦</div>
+        <div class="hero-info">
+          <h2>{{REPO_NAME}}</h2>
+          <div class="remote-url">
+            🔗 <a href="{{REMOTE_URL}}" target="_blank">{{REMOTE_URL}}</a>
+          </div>
+          <p style="margin-top:10px;color:var(--text2);font-size:14px;">{{REPO_DESCRIPTION}}</p>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="badge blue">{{CURRENT_BRANCH}}</span>
+            {{TECH_BADGES}}
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item">
+          <span class="label">Total Commits</span>
+          <span class="value accent">{{TOTAL_COMMITS}}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Contributors</span>
+          <span class="value accent">{{CONTRIBUTOR_COUNT}}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">First Commit</span>
+          <span class="value">{{FIRST_COMMIT_DATE}}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Last Commit</span>
+          <span class="value green">{{LAST_COMMIT_DATE}}</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Primary Language</span>
+          <span class="value">{{PRIMARY_LANGUAGE}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Languages -->
+    <div class="section" id="languages">
+      <div class="section-header">
+        <span class="section-icon">💻</span>
+        <h3>Languages</h3>
+      </div>
+      <div class="lang-bar-wrap">{{LANG_BAR_SEGMENTS}}</div>
+      <div class="lang-list">{{LANG_ITEMS}}</div>
+    </div>
+
+    <!-- Architecture -->
+    <div class="section" id="architecture">
+      <div class="section-header">
+        <span class="section-icon">🏗️</span>
+        <h3>Architecture &amp; Structure</h3>
+      </div>
+      <p style="color:var(--text2);margin-bottom:16px;font-size:14px;">{{ARCH_SUMMARY}}</p>
+      {{ARCH_LAYERS}}
+    </div>
+
+    <!-- File Tree -->
+    <div class="section" id="file-tree">
+      <div class="section-header">
+        <span class="section-icon">📁</span>
+        <h3>File Tree</h3>
+      </div>
+      <div class="card">
+        <div class="file-tree" id="tree-root">{{FILE_TREE_HTML}}</div>
+      </div>
+    </div>
+
+    <!-- Commits -->
+    <div class="section" id="commits">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <h3>Recent Commits</h3>
+      </div>
+      <div class="commit-list">{{COMMIT_LIST_HTML}}</div>
+    </div>
+
+    <!-- Contributors -->
+    <div class="section" id="contributors">
+      <div class="section-header">
+        <span class="section-icon">👥</span>
+        <h3>Contributors</h3>
+      </div>
+      <div class="contributor-list">{{CONTRIBUTORS_HTML}}</div>
+    </div>
+
+    <!-- Tags -->
+    {{TAGS_SECTION}}
+
+    <!-- README -->
+    <div class="section" id="readme">
+      <div class="section-header">
+        <span class="section-icon">📖</span>
+        <h3>README</h3>
+      </div>
+      <div class="card markdown" id="readme-content">{{README_HTML}}</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// Toggle tree dirs
+document.addEventListener('click', function(e) {
+  const toggle = e.target.closest('.tree-toggle');
+  if (toggle) {
+    const children = toggle.closest('.tree-dir-wrap').querySelector('.tree-children');
+    if (children) {
+      children.classList.toggle('collapsed');
+      toggle.textContent = children.classList.contains('collapsed') ? '▶' : '▼';
+    }
+  }
+});
+
+// Scroll spy
+const sections = ['overview','languages','architecture','file-tree','commits','contributors','readme'];
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', function() {
+  let current = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 80) current = id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(current)) {
+      link.classList.add('active');
+    }
+  });
+}, { passive: true });
+</script>
+</body>
+</html>
