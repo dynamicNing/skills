@@ -7,21 +7,6 @@ This repository contains distributable Claude Code Skills — modular extensions
 
 ---
 
-## 什么是 Skill / What is a Skill
-
-Skill 是一个包含 `SKILL.md` 及可选资源文件的目录，打包为 `.skill` 文件后可直接安装到 Claude Code。
-A skill is a directory containing a `SKILL.md` plus optional resources, packaged into a `.skill` file for installation into Claude Code.
-
-```
-<skill-name>/
-├── SKILL.md          # 触发描述 + 使用说明 / Trigger description + instructions
-├── scripts/          # 可执行脚本 / Executable scripts
-├── references/       # 参考文档 / Reference documentation
-└── assets/           # 模板、资源文件 / Templates and assets
-```
-
----
-
 ## Skills 列表 / Skills List
 
 ### 📊 `github-repo-html`
@@ -44,11 +29,44 @@ A skill is a directory containing a `SKILL.md` plus optional resources, packaged
 
 ## 安装 / Installation
 
-将 `.skill` 文件安装到 Claude Code：
-Install a `.skill` file into Claude Code:
+### 方式一：通过 `npx skills`（推荐）
 
+安装全部 skills / Install all skills:
+```bash
+npx skills add dynamicNing/skills
+```
+
+安装指定 skill / Install a specific skill:
+```bash
+npx skills add dynamicNing/skills --skill github-repo-html
+```
+
+### 方式二：通过 Claude Code CLI
+
+先下载 `.skill` 文件，再安装 / Download the `.skill` file, then install:
 ```bash
 claude skill install github-repo-html.skill
+```
+
+### 方式三：直接克隆仓库
+
+```bash
+npx skills add https://github.com/dynamicNing/skills
+```
+
+---
+
+## 什么是 Skill / What is a Skill
+
+Skill 是一个包含 `SKILL.md` 及可选资源文件的目录，打包为 `.skill` 文件后可直接安装到 Claude Code。
+A skill is a directory containing a `SKILL.md` plus optional resources, packaged into a `.skill` file for installation into Claude Code.
+
+```
+<skill-name>/
+├── SKILL.md          # 触发描述 + 使用说明 / Trigger description + instructions
+├── scripts/          # 可执行脚本 / Executable scripts
+├── references/       # 参考文档 / Reference documentation
+└── assets/           # 模板、资源文件 / Templates and assets
 ```
 
 ---
@@ -63,6 +81,3 @@ python3 ~/.claude/skills/skill-creator/scripts/init_skill.py <skill-name> --path
 pip install pyyaml
 python3 ~/.claude/skills/skill-creator/scripts/package_skill.py ./<skill-name> .
 ```
-
-详见 [skill-creator](https://github.com/anthropics/claude-code) 文档。
-See [skill-creator](https://github.com/anthropics/claude-code) documentation for details.
