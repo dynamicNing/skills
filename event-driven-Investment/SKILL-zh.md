@@ -1,11 +1,11 @@
 ---
-name: event-driven-investment
+name: signal-to-trade
 description: >
   事件驱动投资分析，采用四层同心圆模型。将市场事件视为结构性断裂而非单纯新闻标题，
   从事件核心推演至可交易标的，输出含概率/赔率纪律和风险边界的多空方案。
   适用场景：分析宏观/政策/市场事件的投资含义、构建 A 股/港股/美股/ETF/衍生品的可交易映射、
   生成多情景（基准/乐观/悲观）投资框架。触发词包括"事件驱动"、"同心圆推演"、"多空方案"、
-  "可交易映射"、"event-driven-investment-circles"，或任何针对特定事件分析交易/投资含义的请求。
+  "可交易映射"、"signal-to-trade"，或任何针对特定事件分析交易/投资含义的请求。
 ---
 
 # 事件驱动投资同心圆
@@ -102,6 +102,6 @@ description: >
 
 ## 快速示例
 
-- "Use $event-driven-investment: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。"
-- "Use $event-driven-investment: 国内地产政策边际转向是否构成事件？给我多空两套方案。"
-- "Use $event-driven-investment: 黄金快速突破历史高位，做跨市场标的与衍生品映射。"
+- "Use $signal-to-trade: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。"
+- "Use $signal-to-trade: 国内地产政策边际转向是否构成事件？给我多空两套方案。"
+- "Use $signal-to-trade: 黄金快速突破历史高位，做跨市场标的与衍生品映射。"

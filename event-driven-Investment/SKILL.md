@@ -1,5 +1,5 @@
 ---
-name: event-driven-investment
+name: signal-to-trade
 description: >
   Event-driven investment analysis using a four-layer concentric circle model. Treats market events
   as structural breaks (not headlines), maps transmission from event core to tradable instruments,
@@ -7,7 +7,7 @@ description: >
   user wants to analyze a macro/policy/market event for investment implications, build tradable
   mappings across A-shares, HK, US equities, ETFs, or derivatives, or generate multi-scenario
   (base/bull/bear) investment frameworks. Trigger phrases include "事件驱动", "同心圆推演", "多空方案",
-  "可交易映射", "event-driven-investment-circles", or any request to analyze a specific event for
+  "可交易映射", "signal-to-trade", or any request to analyze a specific event for
   trading/investment implications.
 ---
 
@@ -105,6 +105,6 @@ Always output in this order:
 
 ## Quick Start Examples
 
-- "Use $event-driven-investment: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。"
-- "Use $event-driven-investment: 国内地产政策边际转向是否构成事件？给我多空两套方案。"
-- "Use $event-driven-investment: 黄金快速突破历史高位，做跨市场标的与衍生品映射。"
+- "Use $signal-to-trade: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。"
+- "Use $signal-to-trade: 国内地产政策边际转向是否构成事件？给我多空两套方案。"
+- "Use $signal-to-trade: 黄金快速突破历史高位，做跨市场标的与衍生品映射。"
