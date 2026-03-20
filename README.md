@@ -52,6 +52,34 @@ Claude will automatically:
 
 ---
 
+### 📈 `signal-to-trade`
+
+**事件驱动投资分析，从信号到可交易标的的完整推演框架。**
+**Event-driven investment analysis — a full framework from signal to tradable instruments.**
+
+将市场事件视为结构性断裂（而非单纯标题），通过四层同心圆模型推演：
+Treats market events as structural breaks (not headlines), analyzed through a four-layer concentric model:
+
+- **Circle 0** 事件核心 / Core event — 判定事件性质与所处阶段 / Qualify the event and its stage
+- **Circle +1** 逻辑方向 / Logic direction — 一阶传导路径 / First-order transmission paths
+- **Circle +2** 节点扩散 / Node diffusion — 宏观/行业/资本节点映射 / Macro, industry, and capital nodes
+- **Circle +3** 可交易映射 / Tradable mapping — A股/港股/美股/ETF/衍生品 / A-shares, HK, US, ETFs, derivatives
+
+输出含概率/赔率纪律的多空方案和 Base/Bull/Bear 情景树。
+Outputs long/short theses with probability/payoff scoring and Base/Bull/Bear scenario trees.
+
+**触发方式 / Trigger:** "事件驱动分析"、"同心圆推演"、"���空方案"、"signal-to-trade" / any event investment analysis request
+
+#### 使用示例 / Examples
+
+```
+Use $signal-to-trade: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。
+Use $signal-to-trade: 国内地产政策边际转向是否构成事件？给我多空两套方案。
+Use $signal-to-trade: 黄金快速突破历史高位，做跨市场标的与衍生品映射。
+```
+
+---
+
 ## 安装 / Installation
 
 ### 方式一：通过 `npx skills`（推荐）

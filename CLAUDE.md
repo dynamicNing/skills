@@ -39,3 +39,4 @@ python3 ~/.claude/skills/skill-creator/scripts/package_skill.py ./<skill-name> .
 | Skill | 说明 / Description |
 |---|---|
 | `github-repo-html` | 分析本地 Git 仓库并生成 HTML 可视化报告 / Analyze a local Git repo and generate an HTML visual report |
+| `signal-to-trade` | 事件驱动投资分析，四层同心圆推演至可交易映射 / Event-driven investment analysis via four-layer concentric circle model to tradable mappings |
