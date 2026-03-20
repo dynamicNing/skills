@@ -108,3 +108,9 @@ Always output in this order:
 - "Use $signal-to-trade: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。"
 - "Use $signal-to-trade: 国内地产政策边际转向是否构成事件？给我多空两套方案。"
 - "Use $signal-to-trade: 黄金快速突破历史高位，做跨市场标的与衍生品映射。"
+
+---
+
+## Source Credit
+
+The methodology and analytical framework of this skill is sourced from the WeChat public account **"老钱日日谈"**.
