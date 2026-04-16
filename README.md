@@ -25,31 +25,6 @@ This repository contains distributable Claude Code Skills — modular extensions
 
 **触发方式 / Trigger:** 对 Claude 说 "分析这个仓库生成报告" / "analyze my repo and generate an HTML report"
 
-#### 使用方法 / How to Use
-
-安装 skill 后，在 Claude Code 中进入任意本地仓库目录，直接用自然语言触发：
-After installing, open Claude Code in any local repo directory and trigger it naturally:
-
-```
-# 分析当前目录
-帮我分析这个仓库，生成 HTML 报告
-
-# 分析指定路径
-帮我分析 ~/projects/myapp 这个仓库，生成详细说明文档
-
-# English
-analyze this repo and generate an HTML report
-generate a repository report for ~/projects/myapp
-```
-
-Claude 会自动：
-Claude will automatically:
-
-1. 收集 git 信息（远程地址、提交记录、贡献者等）/ Collect git metadata
-2. 读取关键源文件，分析架构分层 / Read key files and analyze architecture
-3. 生成自包含 HTML 文件 / Generate a self-contained HTML file
-4. 输出到 `<仓库名>-report.html`，用浏览器直接打开即可 / Output to `<repo-name>-report.html`, open with any browser
-
 ---
 
 ### 📈 `signal-to-trade`
@@ -70,44 +45,44 @@ Outputs long/short theses with probability/payoff scoring and Base/Bull/Bear sce
 
 **触发方式 / Trigger:** "事件驱动分析"、"同心圆推演"、"多空方案"、"signal-to-trade" / any event investment analysis request
 
-#### 使用示例 / Examples
-
-```
-Use $signal-to-trade: 美国推出超预期AI算力出口限制，帮我做四层同心圆和可交易映射。
-Use $signal-to-trade: 国内地产政策边际转向是否构成事件？给我多空两套方案。
-Use $signal-to-trade: 黄金快速突破历史高位，做跨市场标的与衍生品映射。
-```
-
 > 📖 **来源说明 / Source Credit：** 本 skill 的方法论框架来源于微信公众号**「老钱日日谈」**。
 > The methodology and analytical framework of this skill is sourced from the WeChat public account **"老钱日日谈"**.
 
 ---
 
+### 📝 `personal-resume`
+
+**个人简历存储和查询 skill。**
+**Personal resume storage and query skill.**
+
+纯文本 Markdown 格式存储职业档案，Claude 可以读取并回答关于工作经历、技能、项目的问题。
+Stores career profile in plain text Markdown format. Claude can read and answer questions about work experience, skills, and projects.
+
+**触发方式 / Trigger:** 直接提问 / Ask directly:
+- "我目前的职位是什么？" / "What's my current role?"
+- "列出我的工作经历" / "List my work experience"
+- "我有哪些技术技能？" / "What technical skills do I have?"
+- "总结我的职业亮点" / "Summarize my career highlights"
+
+---
+
 ## 安装 / Installation
 
-### 方式一：通过 `npx skills`（推荐）
+### 方式一：通过 Claude Code CLI
 
-安装全部 skills / Install all skills:
-```bash
-npx skills add dynamicNing/skills
-```
-
-安装指定 skill / Install a specific skill:
-```bash
-npx skills add dynamicNing/skills --skill github-repo-html
-```
-
-### 方式二：通过 Claude Code CLI
-
-先下载 `.skill` 文件，再安装 / Download the `.skill` file, then install:
+下载 `.skill` 文件后安装 / Download the `.skill` file, then install:
 ```bash
 claude skill install github-repo-html.skill
+claude skill install signal-to-trade.skill
+claude skill install personal-resume.skill
 ```
 
-### 方式三：直接克隆仓库
+### 方式二：直接克隆仓库
 
 ```bash
-npx skills add https://github.com/dynamicNing/skills
+git clone https://github.com/dynamicNing/skills.git
+cd skills
+# 然后手动安装需要的 skill / Then manually install the skills you need
 ```
 
 ---
@@ -120,9 +95,9 @@ A skill is a directory containing a `SKILL.md` plus optional resources, packaged
 ```
 <skill-name>/
 ├── SKILL.md          # 触发描述 + 使用说明 / Trigger description + instructions
-├── scripts/          # 可执行脚本 / Executable scripts
-├── references/       # 参考文档 / Reference documentation
-└── assets/           # 模板、资源文件 / Templates and assets
+├── scripts/          # 可执行脚本（可选）/ Executable scripts (optional)
+├── references/       # 参考文档（可选）/ Reference documentation (optional)
+└── assets/           # 模板、资源文件（可选）/ Templates and assets (optional)
 ```
 
 ---
@@ -137,3 +112,9 @@ python3 ~/.claude/skills/skill-creator/scripts/init_skill.py <skill-name> --path
 pip install pyyaml
 python3 ~/.claude/skills/skill-creator/scripts/package_skill.py ./<skill-name> .
 ```
+
+---
+
+## License / 许可证
+
+MIT
