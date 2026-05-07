@@ -66,6 +66,18 @@ Stores career profile in plain text Markdown format. Claude can read and answer 
 
 ---
 
+### 🎬 `anxiansheng-content-marketing`
+
+**安先生三天内容营销/自媒体课程方法论 skill。**
+**An Xiansheng content marketing and short-video self-media framework.**
+
+用于账号定位、内容支点、5A 人群经营、曝光/获客/成交/人设四类内容、卖点开发、场景化选题、内容排期和复盘。
+Use it for account positioning, content fulcrum design, 5A audience operations, exposure/acquisition/closing/persona content, sell-point development, scene-based topics, calendars, and reviews.
+
+**触发方式 / Trigger:** "安先生课程"、"内容支点"、"四类内容"、"帮我做自媒体内容规划"、"用安先生方法拆账号" / any request to apply An Xiansheng's content marketing framework
+
+---
+
 ## 安装 / Installation
 
 ### 方式一：通过 Claude Code CLI
@@ -75,6 +87,7 @@ Stores career profile in plain text Markdown format. Claude can read and answer 
 claude skill install github-repo-html.skill
 claude skill install signal-to-trade.skill
 claude skill install personal-resume.skill
+claude skill install anxiansheng-content-marketing.skill
 ```
 
 ### 方式二：直接克隆仓库
