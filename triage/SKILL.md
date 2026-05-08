@@ -1,164 +1,205 @@
 ---
 name: triage
-description: "Obsidian 第二大脑：批量扫描 raw 原文，用 AI 分层打分（高/中/低沉淀价值），输出筛选清单供 /digest 挑选。解决 raw 积压问题。触发词：/triage、筛选、分层、扫一遍、raw 积压。"
+description: "Obsidian 第二大脑：批量扫描 raw 原文，按高/中/低价值重新判断，写 triage 输出和 JSON 缓存；高/中都进入后续 digest 队列。触发词：/triage、筛选、分层、重新判断、raw 积压。 English: triage raw sources into high/medium/low processing queues."
 ---
 
-## Usage
+# Triage / 筛选
 
-<example>
-User: /triage --source cubox --limit 50
-Assistant: [扫 50 篇 cubox → 读标题+开头 → AI 打分 → 输出清单]
-</example>
+## 用途 / Purpose
 
-<example>
-User: /triage --source notions
-Assistant: [扫所有 notions 原文 → 分层 → 输出清单]
-</example>
+你是知识分拣员。目标是快速判断 raw 原文是否值得后续 `/digest`，并把状态写入 JSON 缓存。
+You classify raw sources for later digest. You do not create wiki nodes.
 
-<example>
-User: /triage --since 2025-01
-Assistant: [只扫最近几个月的 raw 文件]
-</example>
+`/triage` 只做筛选，不做沉淀。
 
-## Instructions
+## 启动前 / Read First
 
-你是知识分拣员。目标是从大量 raw 原文中快速筛出真正值得 `/digest` 的那 5-10%，其他标为低价值跳过。
+在 secondBrain 仓库内执行时，先读取：
 
-这是给用户省时间的工具，不产出 wiki 节点。
+1. `_workspace/docs/pipeline-spec.md`
+2. `_workspace/docs/format-spec.md`
+3. `_workspace/docs/execution-sop.md`
+4. `_workspace/docs/cache-spec.md`
+5. `AGENTS.md` 和 `CLAUDE.md`（如存在）
 
-### 上下文
+必须遵守 `_workspace/_system/config/source-scope.json`。
 
-这是一个 Obsidian 第二大脑：
-- `raw/knowledge/<source>/` — 原文（cubox ~605、notions ~189、dedao、general）
-- `wiki/concepts/` — 已确认知识（~126 个节点）
-- `_workspace/outputs/` — 临时产物
+## 写入边界 / Write Boundaries
 
-### 参数解析
+`/triage` 只能写：
 
-支持参数：
-- `--source <name>` — 只扫某个来源（cubox | notions | dedao | general）
-- `--limit <n>` — 最多扫 n 篇（默认 50）
-- `--since <YYYY-MM>` — 只扫指定时间后的文件（按文件名日期或 mtime）
-- `--dir <path>` — 扫指定目录
-- 无参数时默认 `--source cubox --limit 50`
+- `_workspace/outputs/triage-<source>-<YYYY-MM-DD>.md`
+- `_workspace/cache/raw-processing-cache.json`
 
-### 工作流程
+不能写 `wiki/`，不能写 `raw/`。
 
-**Step 1: 列出目标文件**
+## 参数 / Arguments
 
-用 `find` 或 `ls` 拿到候选列表：
+支持：
 
-```bash
-ls raw/knowledge/cubox/*.md | head -50
-# 或
-find raw/knowledge/ -name "*.md" -newer <date>
+- `--source <name>`：来源键，如 `cubox`、`general`、`notions`、`dedao`、`podcast`。
+- `--limit <n>`：最多处理 n 篇，默认 50，单次不超过 100。
+- `--since <YYYY-MM>`：按文件名或 mtime 过滤。
+- `--dir <path>`：扫描指定 raw 目录。
+- `--revalue`：按当前新标准重新判断，但保留已 digested 项的 digest 状态。
+
+无参数时，优先从启用来源中找未 triage 的 raw，默认 limit 50。
+
+## 工作流程 / Workflow
+
+### Step 0: 读取范围和缓存
+
+1. 读取 `_workspace/_system/config/source-scope.json`。
+2. 读取 `_workspace/cache/raw-processing-cache.json`；不存在时按 `cache-spec` 初始化。
+3. 只处理启用来源。
+4. 跳过内容哈希未变化且已有 triage 状态的文件，除非用户明确要求 `--revalue`。
+5. 对已 `digest.status = digested` 的文件，不重新判断价值；保留原 digest 信息。
+
+旧的 `_workspace/outputs/triage-log.md` 只作历史参考，不再作为幂等状态源。
+
+### Step 1: 列出候选文件
+
+根据 `--source`、`--dir`、`--since`、`--limit` 列出 raw 文件。每次最多 100 篇。
+
+每篇只读取：
+
+- frontmatter 或元数据。
+- 标题。
+- 正文前 500-800 字符。
+
+不要读全文；全文阅读属于 `/digest`。
+
+### Step 2: 三档判断
+
+`triage.status` 只用：`high`、`medium`、`low`、`skipped`。
+
+#### High / 高价值
+
+后续必须 `/digest`。适合：
+
+- 明确有 durable claims、判断框架、长期可复用机制。
+- 深度访谈、课程、书籍笔记、人物经历。
+- 与用户长期关注主题高度相关。
+- 能补充或修正已有 wiki 节点。
+- 有强人文故事、选择、代价、命运转折。
+- 有趣、鲜活、反直觉、新颖，能长期召回。
+- 重复观点但提供新证据、新案例或更好表达。
+
+#### Medium / 中价值
+
+后续也要 `/digest`，只是优先级低于 high。适合：
+
+- 有观点但密度一般。
+- 有案例或方法，但需要结合其他材料才更有价值。
+- 时效性较强但仍含可沉淀判断。
+- 主题相关但优先级不如 high。
+
+#### Low / 低价值
+
+暂不处理，但保留记录。适合：
+
+- 纯新闻聚合、短期快讯、产品发布。
+- 纯技术命令/API/安装教程，且不服务长期知识。
+- 营销噪音、网页剪藏噪音、缺正文内容。
+- 没有新判断、新证据、新案例，也不能强化已有观点。
+
+注意：不要用过窄的“长期知识”标准。人文故事、有趣性、观点新颖、重复强化，都可以构成高/中价值。
+
+### Step 3: 写缓存
+
+每个 raw_path 在 `_workspace/cache/raw-processing-cache.json` 中写入或更新：
+
+```json
+{
+  "raw_path": "raw/knowledge/notions/example.md",
+  "source_key": "notions",
+  "content_hash": "sha256:...",
+  "title": "标题",
+  "triage": {
+    "status": "high",
+    "score": 5,
+    "reasons": ["interesting", "durable_claim"],
+    "triaged_at": "YYYY-MM-DD",
+    "triage_output": "_workspace/outputs/triage-notions-YYYY-MM-DD.md",
+    "next_action": "digest_required"
+  },
+  "digest": {
+    "status": "not_started",
+    "started_at": null,
+    "completed_at": null,
+    "target_nodes": [],
+    "claim_count": 0,
+    "digest_log": null
+  },
+  "last_used_at": null,
+  "notes": ""
+}
 ```
 
-**Step 2: 快速读取每篇**
+`triage.reasons` 优先使用：
 
-对每个文件：
-- 读 frontmatter（拿到 id、url、tags）
-- 读标题（第一个 `#` 行）
-- 读前 500-800 字符的正文（够判断主题和深度）
+- `human_story`
+- `interesting`
+- `novel_view`
+- `useful`
+- `durable_claim`
+- `reinforces_existing`
+- `personal_relevance`
 
-批量读取。不要一次读全文。
+`next_action`：
 
-**Step 3: AI 打分（三档）**
+- high → `digest_required`
+- medium → `digest_candidate`
+- low/skipped → `no_action`
 
-对每篇按以下标准分层：
+### Step 4: 写 triage 输出
 
-#### 高价值（High） — 值得 /digest
-- 长期思考、原则、框架、模型（如：反脆弱、风险共担、成长型思维）
-- 跨行业或跨时间仍成立的判断
-- 深度访谈、书籍笔记、演讲全文
-- 与 wiki 已有概念相关、能补充或修正的内容
-- 非主流但言之有物的观点
+输出到 `_workspace/outputs/triage-<source>-<YYYY-MM-DD>.md` 或带批次名的同类文件。
 
-#### 中等（Medium） — 暂不处理，但值得保留
-- 有观点但时效性较强（年度展望、行业分析）
-- 具体方法论（有用但未必需要长期沉淀）
-- 部分可提取但多数是背景的长文
-
-#### 低价值（Low） — 跳过
-- 纯技术教程（CMD 命令、API 使用、代码片段）
-- 新闻聚合（"八条新闻"、"每周简报"）
-- 产品发布、工具推荐、AI 周报
-- 营销/广告/软文
-- 时效性极强的快讯（某公司季报、某次融资）
-- 标题含"8 more stories"、"This week"、"周刊"等新闻聚合标记
-- 纯网页剪藏噪音（"Read in Cubox"、"Read Original"后没什么实质内容）
-
-#### 近义检测
-如果文章讨论的主题在 `wiki/concepts/` 已有对应概念：
-- 且文章没有新观点 → 降级到低
-- 有补充或修正 → 标记"可 /digest 更新 [[已有概念]]"
-
-**Step 4: 生成清单**
-
-输出到 `_workspace/outputs/triage-<source>-<YYYY-MM-DD>.md`。
-
-格式：
+建议格式：
 
 ```markdown
 ---
 type: "triage"
-source: "cubox"
+source: "notions"
 scanned: 50
-date: "2026-05-03"
+date: "YYYY-MM-DD"
+cache: "_workspace/cache/raw-processing-cache.json"
 ---
 
-# Triage — cubox (50 篇)
+# Triage — notions
 
-统计：高价值 5 | 中等 12 | 低价值 33
+统计：高价值 N | 中价值 N | 低价值 N | 跳过 N
 
-## 高价值（5 篇）
+## 高价值
 
-### 1. [[raw/knowledge/cubox/成为塔勒布门徒.md]]
-- 主题：反脆弱、风险共担、概率思维
-- 建议：`/digest` 处理，可能更新 [[反脆弱]] [[风险共担]] [[塔勒布]]
-- 为什么值得：深度访谈，系统讲塔勒布体系的核心
+### 1. [[raw/knowledge/notions/xxx.md]]
+- 主题：...
+- 建议：`/digest`，可能更新 [[概念A]] [[人物B]]
+- 原因：human_story / interesting / durable_claim / ...
 
-### 2. [[raw/knowledge/cubox/xxx.md]]
-- 主题：xxx
-- 建议：`/digest` 新建概念 [[xxx]]
-- 为什么值得：xxx
+## 中价值
 
-## 中等（12 篇）
+- [[raw/...]] — 主题 | 原因 | 建议
 
-### 列表
-- [[raw/.../a.md]] — 主题 | 简要原因
-- [[raw/.../b.md]] — ...
+## 低价值
 
-## 低价值（33 篇）
-
-### 列表（只标文件名和原因分类）
-- xxx.md — 技术教程
-- yyy.md — 新闻聚合
-- zzz.md — 产品发布
+- [[raw/...]] — 原因
 ```
 
-**Step 5: 汇报**
+### Step 5: 汇报
 
 告诉用户：
-- 扫了多少篇
-- 高价值清单（前 5-10 个，方便立刻用 `/digest` 挑）
-- 清单文件路径
 
-让用户决定：
-- 逐篇 `/digest` 高价值项
-- 或者再扫下一批（`/triage --source cubox --since ...`）
+- 扫描多少篇。
+- 高/中/低数量。
+- 下一批建议优先 digest 的前 5-10 篇。
+- 输出文件路径和缓存状态。
 
-### 关键原则
+## 禁止事项 / Do Not
 
-- **宁可把中等判为低，不要把低判为中**。目标是收敛，不是全覆盖
-- **高价值不超过 10%-15%**。如果某批的"高"比例超过 20%，重新审视标准
-- **信任文件名和开头**。不要读全文——那是 /digest 的事
-- **考虑用户累加习惯**。如果 wiki 里同一概念已经积累很多，标记为"已饱和"
-- **不要产出 wiki 节点**。triage 只做筛选，不做沉淀。沉淀留给 `/digest`
-
-### 不要做的事
-
-- 不要实际调用 `/digest`。只列建议
-- 不要写入 `wiki/`
-- 不要一次扫超过 100 篇（会输出太长）
-- 不要在高/中/低之外新增分层
+- 不要写 `wiki/`。
+- 不要一次扫描超过 100 篇。
+- 不要强行控制高价值比例；宁可多保留高/中候选，不要过早杀掉有趣材料。
+- 不要把 medium 当作“不处理”；medium 也进入 digest 队列。
+- 不要把缓存当成知识层；缓存只存状态。

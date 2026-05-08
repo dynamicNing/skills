@@ -1,32 +1,114 @@
 ---
 name: digest
-description: "Obsidian 第二大脑：交互式消化一篇 raw 原文，提炼 durable claims，产出或更新 wiki 节点。触发词：/digest、消化、读完了、提炼。"
+description: "Obsidian 第二大脑：交互式消化一篇 raw 原文，充分提炼 durable claims，更新 wiki 节点、JSON 缓存和 digest log。触发词：/digest、消化、提炼、继续处理、处理高价值文章。 English: digest one raw source into confirmed wiki knowledge."
 ---
 
-## Usage
+# Digest / 消化
 
-<example>
-User: /digest raw/knowledge/cubox/一篇关于反脆弱的文章.md
-Assistant: [查日志 → 读原文 → 搜 wiki 已有相关概念 → 对话讨论 → 写入 wiki 节点 → 记日志]
-</example>
+## 用途 / Purpose
 
-<example>
-User: /digest（无参数）
-Assistant: [提示用户指定文件，或列出 raw/ 中最近新增的文件供选择]
-</example>
+你是知识助产士。目标是把一篇 `raw/` 原文消化成用户愿意签名的 wiki 知识，而不是生成机械摘要。
+You help turn one raw source into confirmed, source-linked wiki knowledge.
 
-## Instructions
+适用于 secondBrain 仓库：
 
-你是知识助产士。目标是帮用户把一篇原文消化成 wiki 里的持久知识。
+- `raw/` 是捕获层，只读。
+- `wiki/` 是判断层，只写确认后的知识节点。
+- `_workspace/cache/raw-processing-cache.json` 只存处理状态，不存草稿知识。
+- `_workspace/outputs/digest-log.md` 记录 digest 结果。
 
-### 上下文
+## 启动前 / Read First
 
-这是一个 Obsidian 第二大脑仓库，结构如下：
-- `raw/` — 原文堆放地（只读）
-- `wiki/` — 已发布知识层（concepts、topics、people 三类节点）
-- `_workspace/outputs/digest-log.md` — 处理日志（记录哪些原文已被 digest 过）
+在 secondBrain 仓库内执行时，先按顺序读取：
 
-wiki 节点的 frontmatter 格式：
+1. `_workspace/docs/pipeline-spec.md`
+2. `_workspace/docs/format-spec.md`
+3. `_workspace/docs/execution-sop.md`
+4. `_workspace/docs/cache-spec.md`
+5. `AGENTS.md` 和 `CLAUDE.md`（如存在）
+
+若规则冲突，以 `pipeline-spec` 和 `format-spec` 为准；执行顺序不清楚时，以 `execution-sop` 为准。
+
+## 写入边界 / Write Boundaries
+
+`/digest` 只能写：
+
+- `wiki/concepts/`
+- `wiki/topics/`
+- `wiki/people/`
+- `_workspace/cache/raw-processing-cache.json`
+- `_workspace/outputs/digest-log.md`
+
+不能写 `raw/`，不能写 `_workspace/outputs/` 中的其他临时结论，不能手工修改 `wiki/_index.md` 或 `wiki/_lint_report.md`。
+
+## 处理尺度 / Extraction Depth
+
+不要过度精简。用户明确偏好充分沉淀。
+
+- 短文：5-8 条 claims。
+- 普通文章/播客：8-12 条 claims。
+- 长访谈、课程、密集文章：12-20 条或更多。
+- 特别密集的材料可以显著超过 20 条，但要分散到合适的 topic / people / concepts 节点。
+
+同一篇 raw 可以同时更新 `topic`、`person`、`concept`。交叉和重复允许存在。重复观点也可以收录，只要它提供新来源、新案例、新证据或更好的表达。
+
+## 工作流程 / Workflow
+
+### Step 0: 定位目标原文
+
+如果用户给了路径，直接处理该文件。没有路径时：
+
+1. 读取 `_workspace/cache/raw-processing-cache.json`。
+2. 优先列出 `triage.status = high` 且 `digest.status != digested` 的文件。
+3. 高价值处理完后，再处理 `medium`。
+4. 每次只选择一篇。
+
+必须遵守 `_workspace/_system/config/source-scope.json`，不要处理禁用来源。
+
+### Step 1: 幂等自检
+
+对目标 raw_path 做精确检查：
+
+1. 在 JSON 缓存中查 `items[raw_path].digest.status`。
+2. 搜索 `_workspace/outputs/digest-log.md` 是否已有该 raw_path。
+3. 用 `rg -l "raw_path 或文件名" wiki/` 检查 wiki 是否已引用。
+
+如果已 digested：
+
+- 默认跳过。
+- 如果用户明确要求复用/补充/重做，可以追加新判断或重新消化。
+- 复用原有高价值判断时，不要重新 triage。
+
+如果开始处理，可把缓存中该项临时置为 `digest.status = in_progress`；完成或中断时保持状态准确。
+
+### Step 2: 读全文并检索已有 wiki
+
+1. 读取原文全文。
+2. 提取核心人物、主题、概念、场景、反直觉观点、可复用判断。
+3. 用关键词搜索 `wiki/concepts/`、`wiki/topics/`、`wiki/people/`。
+4. 优先更新已有合适节点；没有合适节点时再新建。
+
+不要把原文大段复制到 wiki。wiki 写判断，不写摘抄。
+
+### Step 3: 形成 claims
+
+每条 claim 必须满足：
+
+- 是自然语言判断，不使用 `[claim-001]` 这种机械编号。
+- 能在 6 个月后继续被理解或召回。
+- 标注来源：`（来源：[[raw/knowledge/.../xxx.md]]）`。
+- 与节点名称相关；不把无关判断塞进大而空的概念。
+
+价值判断要现代化，不要只收抽象框架。以下都可以进入 wiki：
+
+- 人文故事、人物经历、真实选择和案例。
+- 有趣、鲜活、怪但能长期召回的材料。
+- 新颖、反直觉或提供新解释框架的观点。
+- 与已有观点重复但能强化判断的新证据、新案例、新表达。
+
+### Step 4: 写 wiki 节点
+
+节点 frontmatter 使用仓库格式：
 
 ```yaml
 ---
@@ -43,99 +125,79 @@ tags:
 ---
 ```
 
-### 工作流程
-
-**Step 0: 幂等自检（必须先做）**
-
-在做任何事之前，检查这篇原文是否已经被处理过：
-
-1. 读 `_workspace/outputs/digest-log.md`（如果文件存在）。
-2. 搜索当前原文路径是否已出现在日志中。
-3. 同时用 grep 搜索 `wiki/` 里是否有文件引用了这篇原文路径：
-   ```bash
-   grep -rl "当前原文文件名" wiki/
-   ```
-
-如果**已处理过**，告诉用户：
-
-> "这篇原文在 [日期] 已经被 digest 过，产出了 [[节点A]]、[[节点B]]。你要：
-> (a) 跳过
-> (b) 在已有节点上追加新判断
-> (c) 重新消化并覆盖"
-
-等用户选择后再继续。用户选 (a) 则结束。
-
-如果**未处理过**，继续 Step 1。
-
-**Step 1: 定位原文**
-
-如果用户提供了文件路径，直接读取。
-如果没有，用 `find raw/ -name "*.md" -newer ... | head -10` 列出最近修改的文件，让用户选。
-
-**Step 2: 读原文 + 搜已有 wiki**
-
-1. 读原文全文。
-2. 用 grep 在 `wiki/concepts/`、`wiki/topics/`、`wiki/people/` 中搜索原文涉及的关键词。
-3. 把搜到的相关 wiki 节点也读一遍。
-
-**Step 3: 提问式消化（核心）**
-
-不要替用户做判断。用提问帮他自己得出结论。依次问：
-
-1. **这篇文章最让你意外的一个点是什么？**（如果没有意外，可能不值得进 wiki）
-2. **如果只保留 1-3 条可以"六个月后仍然有用"的判断，你会留哪几条？**
-3. **这些判断跟 wiki 里已有的 [[相关概念]] 是什么关系——补充、修正、还是重复？**
-
-根据用户回答，继续追问直到 claims 足够清晰。
-
-**Step 4: 产出 wiki 节点**
-
-根据对话结果：
-
-- 如果是新概念：在 `wiki/concepts/` 创建新文件
-- 如果是补充已有概念：更新对应的 wiki 文件
-- 如果是新人物/新主题：在 `wiki/people/` 或 `wiki/topics/` 创建
-
-写入格式要求：
-- claims 用自然语言写，不用 `[claim-001]` 编号
-- 每条 claim 后标注来源：`（来源：[[raw/knowledge/cubox/xxx.md]]）`
-- 来源链接指向 `raw/`，不指向 staging 或 normalized
-- `confirmed: true` 表示用户在对话中确认过
-- `updated_at` 填当天日期
-
-**Step 5: 确认**
-
-写入前先展示给用户看，用户说 OK 再写。
-
-**Step 6: 写处理日志**
-
-写入 wiki 成功后，在 `_workspace/outputs/digest-log.md` 末尾追加一行：
-
-```
-YYYY-MM-DD | raw/knowledge/<source>/文件名.md | 新建/更新 [[节点名1]] [[节点名2]] | 动作说明
-```
-
-动作说明可以是：
-- `新建概念`
-- `更新已有概念，追加 2 条 claims`
-- `用户判断不值得，跳过`
-
-如果 `digest-log.md` 不存在，先创建文件并写入表头：
+正文优先使用：
 
 ```markdown
-# Digest Log
+# 概念名
 
-| 日期 | 原文 | 产出节点 | 动作 |
-|---|---|---|---|
+## 一句话定义
+
+...
+
+## 核心观点
+
+- ...（来源：[[raw/...]]）
+
+## 相关概念
+
+- [[...]]
+
+## 来源
+
+- [[raw/...]]
 ```
 
-然后追加记录行。
+`people` 节点写人物经历、选择、方法和判断；`topics` 节点写主题入口和主题判断；`concepts` 节点写可复用机制、框架、词汇。
 
-### 不要做的事
+### Step 5: 更新缓存和日志
 
-- 不要批量处理。每次只消化一篇。
-- 不要跳过 Step 0 的幂等自检。
-- 不要替用户决定"这篇值不值得"。用提问帮他自己判断。
-- 不要把原文大段复制到 wiki。wiki 是判断，不是摘抄。
-- 不要在 wiki 节点里写超过 10 条 claims。如果太多，说明概念粒度太粗，应该拆分。
-- 不要创建 `_workspace/staging/` 下的任何文件。旧管线已废弃。
+完成后精确更新 `_workspace/cache/raw-processing-cache.json` 中目标 raw_path：
+
+```json
+"digest": {
+  "status": "digested",
+  "started_at": "YYYY-MM-DD",
+  "completed_at": "YYYY-MM-DD",
+  "target_nodes": ["概念A", "主题B"],
+  "claim_count": 12,
+  "digest_log": "_workspace/outputs/digest-log.md"
+}
+```
+
+要求：
+
+- 用 exact `raw_path` 更新，避免误改其他条目。
+- `target_nodes` 写所有新建/更新节点名。
+- `claim_count` 写本次新增或实质更新的 claims/主题判断数量。
+- `updated_at` 写当天日期。
+- 缓存不保存草稿 claims 或长摘要。
+
+同时追加 `_workspace/outputs/digest-log.md`：
+
+```markdown
+| YYYY-MM-DD | raw/knowledge/<source>/文件.md | [[节点A]] [[节点B]] | 动作说明（N条claims/主题判断） |
+```
+
+### Step 6: 验证
+
+完成后运行：
+
+```bash
+node _workspace/scripts/lint.js --write
+node _workspace/scripts/stats.js --write
+```
+
+如果 lint 仍有历史问题，说明新改节点是否命中报告；不要手工改生成报告。
+
+## 确认规则 / Confirmation
+
+默认 `/digest` 需要用户参与确认。若用户已经明确批准某个处理策略，并要求“继续处理、不用确认，除非特殊情况”，可以按该授权继续，但仍然只允许每次处理一篇 raw，并保持缓存、日志和来源链接完整。
+
+## 禁止事项 / Do Not
+
+- 不要批量把多篇 raw 合成一个 digest。
+- 不要把 `_workspace/cache/` 当知识层。
+- 不要把 `_workspace/outputs/` 自动回写 wiki。
+- 不要因为“重复”就跳过有价值材料。
+- 不要强行压缩到 3 条或 10 条以内。
+- 不要处理 source-scope 中禁用的来源。

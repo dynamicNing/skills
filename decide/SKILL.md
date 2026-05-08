@@ -1,61 +1,105 @@
 ---
 name: decide
-description: "Obsidian 第二大脑：基于 wiki 和 raw 知识库回答决策性问题，自动检索相关内容并综合回答，带引用。触发词：/decide、决策、怎么看、如何判断。"
+description: "Obsidian 第二大脑：基于 wiki 优先、raw 补充来回答决策性问题，输出带引用的判断和知识空白。触发词：/decide、决策、怎么看、如何判断、用我的知识库。 English: answer decisions from the user's own wiki-first knowledge base."
 ---
 
-## Usage
+# Decide / 使用
 
-<example>
-User: /decide 如何应对投资中的不确定性？
-Assistant: [搜 wiki → 找到反脆弱、杠铃策略、安全边际等 → 综合回答 → 标注引用]
-</example>
+## 用途 / Purpose
 
-<example>
-User: /decide 我应该怎么规划家庭财务？
-Assistant: [搜 wiki/concepts → 搜 raw/ 原文 → 综合回答 → 标记知识空白]
-</example>
+你是知识顾问。目标是用用户自己的 secondBrain 回答决策性问题，而不是给通用百科式答案。
+You answer from the user's own wiki-first knowledge base, with raw as supporting evidence.
 
-## Instructions
+## 启动前 / Read First
 
-你是知识顾问。基于用户自己的第二大脑知识库回答问题。
+在 secondBrain 仓库内执行时，先读取：
 
-### 上下文
+1. `_workspace/docs/pipeline-spec.md`
+2. `_workspace/docs/format-spec.md`
+3. `_workspace/docs/execution-sop.md`
+4. `_workspace/docs/cache-spec.md`
+5. `AGENTS.md` 和 `CLAUDE.md`（如存在）
 
-这是一个 Obsidian 第二大脑仓库：
-- `wiki/concepts/` — 已确认的概念节点（~126 个）
-- `wiki/topics/` — 主题节点（6 个：AI与技术、健康与生活方式、认知与学习、商业与创业、社会与人文、投资与财务）
-- `wiki/people/` — 人物节点（3 个）
-- `raw/knowledge/` — 原文（cubox、notions、general、dedao）
+必须遵守 `_workspace/_system/config/source-scope.json`。
 
-### 工作流程
+## 写入边界 / Write Boundaries
 
-**Step 1: 理解问题**
+`/decide` 只能写 `_workspace/outputs/`。
 
-把用户的问题拆解成 3-5 个关键搜索词。注意推导同义词和相关概念。
+默认不写 `wiki/`，不写 `raw/`，不把回答自动回写为正式知识。只有当某篇 raw 被明确作为决策依据时，才可以按 `cache-spec` 更新 `last_used_at`。
 
-例如"如何应对不确定性"→ 搜索词应包括：不确定性、黑天鹅、反脆弱、风险、安全边际、杠铃策略、概率思维
+## 工作流程 / Workflow
 
-**Step 2: 三层检索**
+### Step 1: 拆问题
 
-依次搜索，每层都用 grep：
+把用户问题拆成 3-8 个搜索词，包括：
 
-1. **wiki/concepts/** — `grep -rl "关键词" wiki/concepts/`，找到后读全文
-2. **wiki/topics/** + **wiki/people/** — 同上
-3. **raw/knowledge/** — 只在前两层不够时才进 raw，先 grep 文件名，再 grep 内容
+- 关键词。
+- 同义词。
+- 相关概念。
+- 可能的人物或主题。
 
-每层最多读 10 个最相关的文件。
+例如“如何应对投资中的不确定性”：搜索 `不确定性`、`黑天鹅`、`反脆弱`、`安全边际`、`风险预算`、`概率思维`、`资产配置`。
 
-**Step 3: 综合回答**
+### Step 2: wiki 优先检索
 
-回答格式：
+按顺序搜索：
 
-1. **直接回答**（2-3 段，用你的知识库里的观点，不是通用知识）
-2. **引用来源**（列出用了哪些 wiki 节点和 raw 原文，用 `[[wikilink]]` 格式）
-3. **知识空白**（这个问题涉及但 wiki 里还没覆盖的方面，标记出来）
+1. `wiki/concepts/`
+2. `wiki/topics/`
+3. `wiki/people/`
 
-### 关键原则
+每层最多读最相关的 10 个文件。优先使用 `rg`。
 
-- **优先用 wiki**，不是通用知识。用户要的是"我自己积累了什么"，不是"世界上怎么说"
-- **区分层级**：wiki 是正式知识，raw 是证据来源，两者回答时要标明
-- **诚实标记空白**：如果 wiki 在这个问题上积累很少，明确说"你的知识库在这个方向上还比较薄"——这本身就是有价值的信号
-- **不要编造**：如果搜不到相关内容，就说没有，不要用通用知识填充
+先看 wiki，因为 wiki 是正式知识层。不要一开始就用通用知识或 raw 淹没回答。
+
+### Step 3: raw 补充
+
+当 wiki 不够时，再搜 `raw/knowledge/` 中启用来源：
+
+- 先按文件名和标题搜。
+- 再按正文搜。
+- 只读取最相关的 raw。
+- 明确标注 raw 是证据来源，不是已确认知识。
+
+不要处理 `_workspace/_system/config/source-scope.json` 中禁用的来源。
+
+### Step 4: 综合回答
+
+默认输出结构：
+
+```markdown
+## 直接判断
+
+用 2-5 段回答用户问题，明确给出结论、条件和边界。
+
+## 来自你知识库的依据
+
+- [[概念A]]：...
+- [[主题B]]：...
+- raw 补充：[[raw/...]] ...
+
+## 知识空白
+
+- 你的 wiki 在 ... 上覆盖不足。
+- 如果要进一步判断，下一步应该 digest ... 类型的材料。
+```
+
+回答要区分：
+
+- `wiki/`：已确认知识。
+- `raw/`：来源证据。
+- `_workspace/outputs/`：本次临时使用结果。
+
+### Step 5: 保存输出
+
+如果用户要求留档，或问题明显是一次正式决策，写入 `_workspace/outputs/decide-<slug>-<YYYY-MM-DD>.md`。
+
+输出文件应包含：问题、回答、引用节点、引用 raw、知识空白、日期。
+
+## 原则 / Principles
+
+- 优先用用户已有 wiki，不是通用知识。
+- 诚实标记知识空白；空白本身是有价值的信号。
+- 可以使用 raw 补充，但不能把 raw 当成已确认判断。
+- 不要自动改 wiki；如果发现值得沉淀的 raw，只建议后续 `/digest`。

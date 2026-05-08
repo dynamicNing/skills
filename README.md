@@ -76,6 +76,55 @@ Use it for account positioning, content fulcrum design, 5A audience operations, 
 
 **触发方式 / Trigger:** "安先生课程"、"内容支点"、"四类内容"、"帮我做自媒体内容规划"、"用安先生方法拆账号" / any request to apply An Xiansheng's content marketing framework
 
+
+---
+
+### 🧠 `triage`
+
+**Obsidian 第二大脑 raw 原文筛选：按高/中/低价值分层，并写入 JSON 缓存。**
+**SecondBrain raw-source triage: classify sources as high/medium/low and update the JSON cache.**
+
+高价值和中价值都会进入后续 `/digest` 队列；人文故事、有趣材料、新颖观点、重复但能强化已有判断的材料都可以被保留。
+Both high and medium items enter the later `/digest` queue; human stories, interesting material, novel viewpoints, and reinforcing repetitions are treated as valuable.
+
+**触发方式 / Trigger:** `/triage`、"筛选 raw"、"重新判断价值" / `/triage`, "triage raw sources", "revalue sources"
+
+---
+
+### 🧠 `digest`
+
+**Obsidian 第二大脑单篇原文消化：充分提炼 durable claims，更新 wiki、JSON 缓存和 digest log。**
+**SecondBrain single-source digestion: extract rich durable claims and update wiki, JSON cache, and digest log.**
+
+不再过度压缩；长访谈、课程和密集文章可以沉淀 12-20 条或更多 claims，并允许 topic / people / concepts 交叉更新。
+Avoids over-compression; long interviews, courses, and dense sources may produce 12-20+ claims and update topics, people, and concepts together.
+
+**触发方式 / Trigger:** `/digest`、"消化这篇"、"继续处理高价值文章" / `/digest`, "digest this source", "continue high-value processing"
+
+---
+
+### 🧠 `decide`
+
+**基于用户自己的 wiki 优先、raw 补充来回答决策性问题。**
+**Answers decision questions with wiki-first retrieval and raw as supporting evidence.**
+
+输出直接判断、引用依据和知识空白；不会把临时回答自动回写到 wiki。
+Outputs direct judgment, cited evidence, and knowledge gaps; it does not automatically write temporary answers back to wiki.
+
+**触发方式 / Trigger:** `/decide`、"怎么看"、"如何判断"、"用我的知识库" / `/decide`, "how should I judge", "use my knowledge base"
+
+---
+
+### 🧠 `prune`
+
+**月度修剪 secondBrain wiki：发现近义、重复、低质量、过宽或过窄节点，并在确认后合并/清理/归档。**
+**Monthly SecondBrain wiki pruning: identify near-duplicates, low-quality nodes, and granularity problems, then merge/clean/archive after approval.**
+
+重复不再默认删除；如果能提供新证据、新案例或更好表达，可以保留为强化材料。
+Repetition is not deleted by default; it can be kept when it adds evidence, cases, or better phrasing.
+
+**触发方式 / Trigger:** `/prune`、"清理 wiki"、"合并概念"、"去重" / `/prune`, "clean wiki", "merge concepts", "deduplicate"
+
 ---
 
 ## 安装 / Installation
